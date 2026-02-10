@@ -8,7 +8,13 @@
 |--------|------|----------|
 | `week3-rations` | 3 | Methods, Parameters, Return Types, switch, while Loops |
 
-## Progress — Week 3 Rations Manager
+---
+
+## Week 3 — Field Rations Manager
+
+A menu-driven console app that manages a squad's field rations. Uses all 5 programming patterns from the study guide.
+
+### Progress
 
 - [x] Pattern 1: Store stuff — parallel arrays (rations + calories)
 - [x] Pattern 2: Loop through stuff — `DisplayAll()` void method
@@ -16,15 +22,286 @@
 - [x] Pattern 4: Wrap in methods — `GetTotalCalories()`, `IsHighCalorie()`
 - [x] Pattern 5: Keep running — `while (running)` + `switch` menu
 
+---
+
+## Tutorial — Building It Step by Step
+
+### Step 1: The Skeleton (Pattern 1 — Store Stuff)
+
+Every C# console app starts the same way.
+
+```csharp
+using System;
+class Program
+{
+    static void Main(string[] args)
+    {
+        string[] rations = { "Combat Biscuit", "Beef Jerky", "Energy Bar", "MRE Pasta", "Protein Shake" };
+        int[] calories = { 250, 189, 350, 620, 280 };
+    }
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `using System;` | Imports core tools like `Console`. Without this, nothing prints. |
+| `class Program` | The container. Everything lives inside this class. |
+| `static void Main(string[] args)` | The entry point. When you hit Run, execution starts here. |
+| `string[] rations = { ... };` | An array of strings — the ration names. |
+| `int[] calories = { ... };` | An array of integers — the calorie counts. |
+
+**Parallel arrays**: `rations[0]` ("Combat Biscuit") maps to `calories[0]` (250). Same index = same item. This is how you store related data in two arrays without using objects.
+
+---
+
+### Step 2: Display Method (Pattern 2 — Loop + Pattern 4 — Methods)
+
+A `void` method that prints all rations. It does a job but returns nothing.
+
+```csharp
+static void DisplayAll(string[] names, int[] calories)
+{
+    for (int i = 0; i < names.Length; i++)
+    {
+        Console.WriteLine($" [{i}] {names[i]} - {calories[i]} cal");
+    }
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `static void` | Belongs to the class. Returns nothing. |
+| `string[] names, int[] calories` | Parameters — the method receives both arrays when called. |
+| `for (int i = 0; i < names.Length; i++)` | Loop from 0 to array length. `i` is the index. |
+| `names.Length` | How many items in the array (5). The loop stops before reaching 5 because `<` not `<=`. |
+| `$" [{i}] {names[i]} - {calories[i]} cal"` | String interpolation. The `$` lets you embed variables inside `{}`. |
+
+**Calling it from Main:**
+```csharp
+DisplayAll(rations, calories);
+```
+`rations` gets received as `names`. `calories` gets received as `calories`. The parameter names don't have to match — the position matters.
+
+---
+
+### Step 3: Search Method (Pattern 3 — Decide + Pattern 4 — Methods)
+
+A method that returns an `int` — the position where the item was found, or -1 if not found.
+
+```csharp
+static int FindRation(string[] names, string search)
+{
+    for (int i = 0; i < names.Length; i++)
+    {
+        if (names[i].ToLower() == search.ToLower())
+            return i;
+    }
+    return -1;
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `static int` | Returns an integer — the index of the found item. |
+| `string search` | The search term passed in by the user. |
+| `.ToLower()` | Converts to lowercase so "BEEF JERKY" matches "Beef Jerky". Case-insensitive search. |
+| `return i;` | Found it — immediately exit the method and send back the position. |
+| `return -1;` | Loop finished without finding anything. -1 is the universal "not found" signal because array indexes start at 0, so -1 can never be a real position. |
+
+**Calling it from Main:**
+```csharp
+int idx = FindRation(rations, s);
+if (idx != -1)
+    Console.WriteLine($"Found: {rations[idx]} - {calories[idx]} cal");
+else
+    Console.WriteLine("Ration not found.");
+```
+Always check if the result is -1 before using it as an index. Using -1 as an array index would crash the program.
+
+---
+
+### Step 4a: Accumulator Method (Pattern 4 — Methods)
+
+A method that totals up all values in an array. Start at 0, add each value, return the sum.
+
+```csharp
+static int GetTotalCalories(int[] calories)
+{
+    int total = 0;
+    foreach (int c in calories)
+    {
+        total += c;
+    }
+    return total;
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `int total = 0;` | The accumulator. Starts at zero. |
+| `foreach (int c in calories)` | Simpler than `for` when you don't need the index. `c` takes the value of each element in order. |
+| `total += c;` | Shorthand for `total = total + c`. Adds current value to the running total. |
+| `return total;` | After the loop, send back the sum. |
+
+**`for` vs `foreach`**: Use `for` when you need the index (to access parallel arrays). Use `foreach` when you just need each value.
+
+**Calling it from Main:**
+```csharp
+Console.WriteLine($"Total Calories: {GetTotalCalories(calories)} Cal");
+```
+You can call a method directly inside string interpolation. It runs, returns the value, and that value gets printed.
+
+---
+
+### Step 4b: Bool Method (Pattern 4 — Methods)
+
+A method that returns `true` or `false`. The simplest type of method.
+
+```csharp
+static bool IsHighCalorie(int calories, int threshold)
+{
+    return calories >= threshold;
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `static bool` | Returns true or false, nothing else. |
+| `int calories, int threshold` | Two parameters — the value to check and the limit to check against. |
+| `return calories >= threshold;` | The expression `calories >= threshold` already IS a bool. If 620 >= 400, it evaluates to `true`. No if statement needed. |
+
+**Calling it from Main:**
+```csharp
+if (IsHighCalorie(calories[pos], 400))
+    Console.WriteLine($"{rations[pos]} is high calorie.");
+```
+The method returns true/false, which goes directly into the `if` condition.
+
+---
+
+### Step 5: Menu + While Loop + Switch (Pattern 5 — Keep Running)
+
+The `ShowMenu` method just prints options. Another `void` method.
+
+```csharp
+static void ShowMenu()
+{
+    Console.WriteLine("\n=== FIELD RATIONS MANAGER ===");
+    Console.WriteLine("[1] Display All Rations");
+    Console.WriteLine("[2] Search for a Ration");
+    Console.WriteLine("[3] Total Calories");
+    Console.WriteLine("[4] Check if High Calorie");
+    Console.WriteLine("[0] Exit");
+    Console.Write("Select: ");
+}
+```
+
+`\n` at the start adds a blank line above the menu for readability. `Console.Write` (not `WriteLine`) keeps the cursor on the same line as "Select: ".
+
+**The while loop + switch in Main:**
+
+```csharp
+bool running = true;
+while (running)
+{
+    ShowMenu();
+    string choice = Console.ReadLine();
+
+    switch (choice)
+    {
+        case "1":
+            DisplayAll(rations, calories);
+            break;
+        case "2":
+            // ... search logic
+            break;
+        case "3":
+            // ... total logic
+            break;
+        case "4":
+            // ... high calorie logic
+            break;
+        case "0":
+            running = false;
+            Console.WriteLine("Exiting...");
+            break;
+        default:
+            Console.WriteLine("Invalid choice.");
+            break;
+    }
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `bool running = true;` | The kill switch. Starts ON. |
+| `while (running)` | Keep looping as long as `running` is true. |
+| `ShowMenu();` | Prints the menu every loop iteration. |
+| `Console.ReadLine();` | Waits for user input. |
+| `switch (choice)` | Checks `choice` against each case. Cleaner than chaining if/else. |
+| `case "1":` | If choice equals "1", run this block. |
+| `break;` | Exits the switch. Without it, execution falls through to the next case. |
+| `case "0": running = false;` | Flips the kill switch. The while loop checks the condition again and stops. |
+| `default:` | Catches anything that didn't match a case. Like `else` in if/else. |
+
+---
+
+## Program Structure — Where Everything Goes
+
+```
+class Program
+{
+    DisplayAll()        ← method (sibling)
+    ShowMenu()          ← method (sibling)
+    FindRation()        ← method (sibling)
+    GetTotalCalories()  ← method (sibling)
+    IsHighCalorie()     ← method (sibling)
+
+    Main()              ← method (sibling) — calls the others
+    {
+        arrays          ← data lives here
+        while loop      ← calling code lives here
+        {
+            switch      ← calls methods from here
+        }
+    }
+}
+```
+
+**Rules:**
+- All methods are **siblings** inside the class — never nested inside each other
+- **Method definitions** (the code that says what a method does) go above Main
+- **Method calls** (the code that runs a method) go inside Main
+- Never put calling code loose in the class between methods
+
+---
+
 ## Methods Reference
 
-| Method | Return | Purpose |
-|--------|--------|---------|
-| `DisplayAll(string[], int[])` | void | Prints all rations with index and calories |
-| `ShowMenu()` | void | Prints the menu options |
-| `FindRation(string[], string)` | int | Search by name, returns index or -1 |
-| `GetTotalCalories(int[])` | int | Accumulator — sums all calories |
-| `IsHighCalorie(int, int)` | bool | Returns true if calories >= threshold |
+| Method | Return | Parameters | Purpose |
+|--------|--------|------------|---------|
+| `DisplayAll` | void | `string[] names, int[] calories` | Prints all rations with index |
+| `ShowMenu` | void | none | Prints the menu options |
+| `FindRation` | int | `string[] names, string search` | Search by name, returns index or -1 |
+| `GetTotalCalories` | int | `int[] calories` | Accumulator — sums all calories |
+| `IsHighCalorie` | bool | `int calories, int threshold` | Returns true if calories >= threshold |
+
+---
+
+## Common Mistakes
+
+| Mistake | Why It Breaks | Fix |
+|---------|--------------|-----|
+| Putting calling code between methods | Code can't execute outside a method body | Move it inside Main |
+| Nesting a method inside Main | C# doesn't allow methods inside methods | Move it outside Main, inside the class |
+| Missing `break;` in switch case | Execution falls through to the next case | Always end each case with `break;` |
+| Putting `case` inside an `if/else` block | Cases must be direct children of `switch` | Close the if/else first, then add the case |
+| Using -1 as an array index | Arrays start at 0, -1 crashes the program | Always check `if (idx != -1)` first |
+| Missing `$` before string with `{}` | Without `$`, curly braces print literally | `$"text {variable}"` not `"text {variable}"` |
+| Missing semicolon `;` | Every statement needs one | Check line endings |
+| `IsHighCalorie` returning true but printing "normal" | Logic is backwards | Match the message to the condition |
+
+---
 
 ## The 5 Patterns
 
@@ -35,17 +312,6 @@
 | 3 | Decide on stuff | `if / switch` | Choose what to do |
 | 4 | Wrap in methods | `static int Find(...)` | Reuse code |
 | 5 | Keep running | `while (running) + menu` | Interactive app |
-
-## Lessons Learned
-
-- Methods go **above Main**, as siblings inside the class — never nested
-- Calling code goes **inside Main** — never loose in the class
-- `return -1` = universal "not found" convention
-- `total += c` = accumulator pattern (start at 0, add each, return sum)
-- `switch` cases need `break;` or execution falls through
-- `case "0": running = false;` kills the while loop
-- `else` with one line doesn't need curly braces
-- Watch your curly braces — cases must be siblings, not nested inside if/else blocks
 
 ---
 
