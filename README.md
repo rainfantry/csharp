@@ -14,7 +14,17 @@
 - [x] Pattern 2: Loop through stuff — `DisplayAll()` void method
 - [x] Pattern 3: Decide on stuff — `FindRation()` search with return int / -1
 - [x] Pattern 4: Wrap in methods — `GetTotalCalories()`, `IsHighCalorie()`
-- [ ] Pattern 5: Keep running — while loop + switch menu
+- [x] Pattern 5: Keep running — `while (running)` + `switch` menu
+
+## Methods Reference
+
+| Method | Return | Purpose |
+|--------|--------|---------|
+| `DisplayAll(string[], int[])` | void | Prints all rations with index and calories |
+| `ShowMenu()` | void | Prints the menu options |
+| `FindRation(string[], string)` | int | Search by name, returns index or -1 |
+| `GetTotalCalories(int[])` | int | Accumulator — sums all calories |
+| `IsHighCalorie(int, int)` | bool | Returns true if calories >= threshold |
 
 ## The 5 Patterns
 
@@ -25,6 +35,17 @@
 | 3 | Decide on stuff | `if / switch` | Choose what to do |
 | 4 | Wrap in methods | `static int Find(...)` | Reuse code |
 | 5 | Keep running | `while (running) + menu` | Interactive app |
+
+## Lessons Learned
+
+- Methods go **above Main**, as siblings inside the class — never nested
+- Calling code goes **inside Main** — never loose in the class
+- `return -1` = universal "not found" convention
+- `total += c` = accumulator pattern (start at 0, add each, return sum)
+- `switch` cases need `break;` or execution falls through
+- `case "0": running = false;` kills the while loop
+- `else` with one line doesn't need curly braces
+- Watch your curly braces — cases must be siblings, not nested inside if/else blocks
 
 ---
 
