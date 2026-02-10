@@ -13,7 +13,7 @@
 - [x] Pattern 1: Store stuff — parallel arrays (rations + calories)
 - [x] Pattern 2: Loop through stuff — `DisplayAll()` void method
 - [x] Pattern 3: Decide on stuff — `FindRation()` search with return int / -1
-- [ ] Pattern 4: Wrap in methods — `GetTotalCalories()`, `IsHighCalorie()`
+- [x] Pattern 4: Wrap in methods — `GetTotalCalories()`, `IsHighCalorie()`
 - [ ] Pattern 5: Keep running — while loop + switch menu
 
 ## The 5 Patterns
