@@ -7,6 +7,7 @@
 | Folder | Week | Concepts |
 |--------|------|----------|
 | `week3-rations` | 3 | Methods, Parameters, Return Types, switch, while Loops |
+| `week3-switch` | 3 | switch statement with int cases |
 
 ---
 
@@ -300,6 +301,68 @@ class Program
 | Missing `$` before string with `{}` | Without `$`, curly braces print literally | `$"text {variable}"` not `"text {variable}"` |
 | Missing semicolon `;` | Every statement needs one | Check line endings |
 | `IsHighCalorie` returning true but printing "normal" | Logic is backwards | Match the message to the condition |
+
+---
+
+## Week 3 — Switch with Integers (`week3-switch`)
+
+A basic switch statement using `int` instead of `string`. Maps a day number to a day name.
+
+```csharp
+int day = 4;
+switch (day)
+{
+    case 1:
+        Console.WriteLine("Monday");
+        break;
+    case 2:
+        Console.WriteLine("Tuesday");
+        break;
+    case 3:
+        Console.WriteLine("Wednesday");
+        break;
+    case 4:
+        Console.WriteLine("HURRDURR");
+        break;
+    case 5:
+        Console.WriteLine("Friday");
+        break;
+    case 6:
+        Console.WriteLine("Saturday");
+        break;
+    case 7:
+        Console.WriteLine("Sunday");
+        break;
+    default:
+        Console.WriteLine("Invalid day");
+        break;
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `int day = 4;` | The variable being checked. An integer this time, not a string. |
+| `switch (day)` | Evaluates `day` against each case. |
+| `case 1:` | Note: no quotes. These are `int` values, not strings. `case 1:` not `case "1":`. |
+| `break;` | Exits the switch after the matched case runs. |
+| `default:` | Catches any value that doesn't match (e.g. 0, 8, -3, 999). |
+
+### String vs Int Cases
+
+| Data Type | Case Syntax | Example |
+|-----------|------------|---------|
+| `string` | `case "1":` | Menu choices from `Console.ReadLine()` (always returns string) |
+| `int` | `case 1:` | Numeric variables, counters, enums |
+
+`Console.ReadLine()` always returns a `string`, so menu apps use `case "1":` with quotes. If you have an `int` variable, use `case 1:` without quotes.
+
+### Output
+
+```
+HURRDURR
+```
+
+Because `day` is 4, only `case 4:` executes. Every other case is skipped. If `day` were 9, `default:` would catch it and print "Invalid day".
 
 ---
 
