@@ -8,6 +8,7 @@
 |--------|------|----------|
 | `week3-rations` | 3 | Methods, Parameters, Return Types, switch, while Loops |
 | `week3-switch` | 3 | switch statement with int cases |
+| `week3-portscan` | 3 | Port Scan Analyzer — pentest-themed, all 5 patterns |
 
 ---
 
@@ -363,6 +364,177 @@ HURRDURR
 ```
 
 Because `day` is 4, only `case 4:` executes. Every other case is skipped. If `day` were 9, `default:` would catch it and print "Invalid day".
+
+---
+
+## Week 3 — Port Scan Analyzer (`week3-portscan`)
+
+Same 5 patterns as the Rations Manager, reskinned for pentest. Simulates analyzing nmap scan results.
+
+### What It Does
+
+```
+[*] Scan complete. 9 ports scanned.
+[*] 7 open | 2 closed/filtered
+
+=== PORT SCAN ANALYZER ===
+[1] View All Results
+[2] Search Port
+[3] Count Open Ports
+[4] Check High Risk
+[5] Filter by State
+[0] Exit
+nmap>
+```
+
+### The Data — Three Parallel Arrays
+
+```csharp
+int[] ports =       { 21,      22,     23,       80,     139,    443,    445,   3306,    8080 };
+string[] services = { "ftp",   "ssh",  "telnet", "http", "smb",  "https","smb", "mysql", "http-proxy" };
+string[] states =   { "open",  "open", "open",   "open", "open", "open", "open","closed","filtered" };
+```
+
+Three arrays instead of two. Same index = same port. `ports[0]` (21) maps to `services[0]` ("ftp") maps to `states[0]` ("open"). This is how nmap stores results internally — port, service, state.
+
+### Methods — Pattern Mapping
+
+| Method | Return | Rations Equivalent | Pentest Purpose |
+|--------|--------|--------------------|-----------------|
+| `DisplayScanResults()` | void | `DisplayAll()` | Print all ports with service and state |
+| `ShowMenu()` | void | `ShowMenu()` | Print the menu |
+| `FindPort()` | int | `FindRation()` | Search by port number, return index or -1 |
+| `CountOpen()` | int | `GetTotalCalories()` | Accumulator — count open ports instead of summing calories |
+| `IsHighRisk()` | bool | `IsHighCalorie()` | Check if service is exploitable (telnet, ftp, smb) |
+| `FilterByState()` | void | (new) | Filter results by open/closed/filtered |
+
+### Line-by-Line — New Concepts
+
+**`DisplayScanResults` — Formatted output with alignment**
+
+```csharp
+Console.WriteLine($"  {ports[i],-9} {services[i],-15} {states[i]}");
+```
+
+| Part | What It Does |
+|------|-------------|
+| `{ports[i],-9}` | Left-align in a 9-character wide column. The `-` means left-align. |
+| `{services[i],-15}` | Left-align in a 15-character wide column. Makes output line up neatly. |
+
+Without alignment: `21 ftp open` / `3306 mysql closed` (messy).
+With alignment: columns line up like real nmap output.
+
+**`FindPort` — Searching ints instead of strings**
+
+```csharp
+static int FindPort(int[] ports, int target)
+{
+    for (int i = 0; i < ports.Length; i++)
+    {
+        if (ports[i] == target)
+            return i;
+    }
+    return -1;
+}
+```
+
+Same pattern as `FindRation` but comparing `int == int` instead of `string == string`. No `.ToLower()` needed — numbers don't have case.
+
+**`CountOpen` — Accumulator with a condition**
+
+```csharp
+static int CountOpen(string[] states)
+{
+    int count = 0;
+    foreach (string s in states)
+    {
+        if (s == "open")
+            count++;
+    }
+    return count;
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `int count = 0;` | Accumulator starts at zero. |
+| `if (s == "open")` | Only count ports that are open — adds a filter to the accumulator pattern. |
+| `count++;` | Shorthand for `count = count + 1`. Same as `count += 1`. |
+
+In rations, you summed all values. Here you count values that match a condition. Same pattern, just with an `if` gate.
+
+**`IsHighRisk` — Bool with OR conditions**
+
+```csharp
+static bool IsHighRisk(string service)
+{
+    return service == "telnet" || service == "ftp" || service == "smb";
+}
+```
+
+| Part | What It Does |
+|------|-------------|
+| `\|\|` | Logical OR. Returns true if ANY condition is true. |
+| `service == "telnet"` | Telnet transmits credentials in plaintext. |
+| `service == "ftp"` | FTP transmits credentials in plaintext. |
+| `service == "smb"` | SMB is commonly exploited (EternalBlue, relay attacks). |
+
+Why these are high risk:
+- **Telnet (23)**: Everything sent in cleartext. Use SSH instead.
+- **FTP (21)**: Credentials in cleartext. Use SFTP instead.
+- **SMB (139/445)**: EternalBlue (MS17-010), relay attacks, null sessions.
+
+**`int.TryParse` — Safe string-to-int conversion**
+
+```csharp
+if (int.TryParse(input, out portNum))
+```
+
+| Part | What It Does |
+|------|-------------|
+| `int.TryParse(input, out portNum)` | Tries to convert string to int. Returns true if it worked, false if not. |
+| `out portNum` | If conversion succeeds, the result gets stored in `portNum`. |
+
+`Console.ReadLine()` returns a string. You can't compare `"22" == 22`. `TryParse` safely converts without crashing if the user types "abc".
+
+**`FilterByState` — Void method with four parameters**
+
+```csharp
+static void FilterByState(int[] ports, string[] services, string[] states, string filter)
+```
+
+More parameters doesn't change the pattern. The method receives all three arrays plus the filter string. Loops through, prints only matching rows. The `bool found` flag tracks whether anything matched so you can print "No ports found" if nothing did.
+
+### Pentest Concepts in the Code
+
+| C# Concept | Pentest Application |
+|-------------|-------------------|
+| Parallel arrays | How scan tools store results (port, service, state) |
+| Accumulator with condition | Counting open ports, vulnerable services, live hosts |
+| Bool method with OR | Risk classification — checking against known-bad lists |
+| Search returning -1 | Port lookup — "is this port in the scan?" |
+| Filter method | Filtering scan results by state (like `nmap --open`) |
+| `int.TryParse` | Input validation — don't trust user input (ever) |
+| String formatting `{,-9}` | Clean output formatting like real security tools |
+
+### What Nmap Actually Does
+
+This app simulates what happens AFTER a scan. Real nmap:
+
+```bash
+nmap -sV -sC 192.168.1.64
+```
+
+Output:
+```
+PORT     STATE    SERVICE     VERSION
+21/tcp   open     ftp         vsftpd 3.0.5
+22/tcp   open     ssh         OpenSSH 9.7
+23/tcp   open     telnet      Linux telnetd
+80/tcp   open     http        Apache httpd 2.4
+```
+
+Your C# app stores and analyzes that same data structure. Same pattern, different tool.
 
 ---
 
