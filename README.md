@@ -10,6 +10,7 @@
 | `week3-switch` | 3 | switch statement with int cases |
 | `week3-portscan` | 3 | Port Scan Analyzer — pentest-themed, all 5 patterns |
 | `week3-portscanner` | 3 | Real TCP port scanner — scans live targets with TcpClient |
+| `week3-threatprofiler` | 3 | Threat Actor Profiler — intel analysis tool, DST-Group-TR-3335 |
 
 ---
 
@@ -656,6 +657,105 @@ This is `nmap -sT` (TCP connect scan). It's the most basic scan type — a full 
 | `[!]` | Warning/alert | Custom tools |
 
 These prefixes are standard across pentest tools. Using them in your C# output makes it look and feel like a real security tool.
+
+---
+
+## Week 3 — Threat Actor Profiler (`week3-threatprofiler`)
+
+An intel analysis tool that profiles threat actors. Based on adversary analysis methodology from **DST-Group-TR-3335** (Australian Defence Science & Technology — *A Simple Handbook for Non-Traditional Red Teaming*).
+
+### What It Does
+
+```
+  ACTOR           CAP INTENT       RISK
+  ─────────────────────────────────────────
+  APT28             9 espionage    critical
+  Lazarus           8 financial    critical
+  ScriptKiddie      2 chaos        low
+  Insider           5 sabotage     high
+  Hacktivists       4 ideology     medium
+```
+
+### The Data — Four Parallel Arrays
+
+```csharp
+string[] actors =    { "APT28", "Lazarus", "ScriptKiddie", "Insider", "Hacktivists" };
+int[] capability =   { 9, 8, 2, 5, 4 };
+string[] intent =    { "espionage", "financial", "chaos", "sabotage", "ideology" };
+string[] risk =      { "critical", "critical", "low", "high", "medium" };
+```
+
+Four arrays instead of two or three. Same rule: same index = same actor.
+
+- `actors[0]` = "APT28", `capability[0]` = 9, `intent[0]` = "espionage", `risk[0]` = "critical"
+- `actors[2]` = "ScriptKiddie", `capability[2]` = 2, `intent[2]` = "chaos", `risk[2]` = "low"
+
+### The Threat Actors — Who They Are
+
+| Actor | Capability | Intent | Risk | Real World |
+|-------|-----------|--------|------|-----------|
+| APT28 (Fancy Bear) | 9 | Espionage | Critical | Russian military intelligence (GRU). State-sponsored. |
+| Lazarus | 8 | Financial | Critical | North Korean. Bank heists, crypto theft, ransomware. |
+| Script Kiddie | 2 | Chaos | Low | Uses tools they don't understand. Low skill, low impact. |
+| Insider | 5 | Sabotage | High | Employee with access. Moderate skill but has credentials. |
+| Hacktivists | 4 | Ideology | Medium | Anonymous-style. DDoS, defacement, data leaks. |
+
+### Line-by-Line
+
+**`DisplayActors` — Void method with 4 parameters**
+
+```csharp
+static void DisplayActors(string[] actors, int[] capability, string[] intent, string[] risk)
+{
+    Console.WriteLine($"\n  {"ACTOR",-15} {"CAP",3} {"INTENT",-12} {"RISK",-8}");
+    Console.WriteLine("  ─────────────────────────────────────────");
+    for (int i = 0; i < actors.Length; i++)
+    {
+        Console.WriteLine($"  {actors[i],-15} {capability[i],3} {intent[i],-12} {risk[i],-8}");
+    }
+}
+```
+
+| Line | What It Does |
+|------|-------------|
+| `string[] actors, int[] capability, string[] intent, string[] risk` | Four parameters — receives all four arrays. More parameters doesn't change the pattern. |
+| `{"ACTOR",-15}` | Column header. `-15` = left-align in 15 chars. Strings in the format are the header text. |
+| `{"CAP",3}` | Right-align in 3 chars. Numbers look better right-aligned. |
+| `{actors[i],-15}` | Each actor name, left-aligned in 15 chars so columns line up. |
+| `{capability[i],3}` | Capability score, right-aligned. Single digit numbers get padded with spaces. |
+
+**Calling from Main — ORDER MATTERS**
+
+```csharp
+// WRONG — call before arrays exist
+DisplayActors(actors, capability, intent, risk);    // actors doesn't exist yet!
+string[] actors = { ... };
+
+// RIGHT — arrays first, then call
+string[] actors = { ... };
+int[] capability = { ... };
+string[] intent = { ... };
+string[] risk = { ... };
+DisplayActors(actors, capability, intent, risk);    // now they exist
+```
+
+C# reads top to bottom. You can't use a variable before you create it. Methods can be defined above Main (they're just blueprints), but **variables must be declared before you use them**.
+
+### DST-Group-TR-3335 Connection
+
+The handbook describes red teaming as requiring structured adversary analysis:
+
+> *"Understanding the adversary's capabilities, intentions, and likely courses of action is fundamental to effective red teaming."* — Section 3
+
+This program stores that structured analysis in parallel arrays. In a real intel shop, this data would be in a database. For learning C#, arrays do the same job.
+
+### Mistakes Made Building This
+
+| Mistake | What Happened | Lesson |
+|---------|--------------|--------|
+| Called method before arrays | `DisplayActors()` was above the array declarations | Variables must exist before you use them |
+| Forgot to call the method | Wrote `DisplayActors` but never called it from Main | A method does nothing until you call it |
+| Messy indentation | Main was indented too far | Ctrl+K, Ctrl+D auto-formats in Visual Studio |
 
 ---
 
