@@ -9,6 +9,7 @@
 | `week3-rations` | 3 | Methods, Parameters, Return Types, switch, while Loops |
 | `week3-switch` | 3 | switch statement with int cases |
 | `week3-portscan` | 3 | Port Scan Analyzer — pentest-themed, all 5 patterns |
+| `week3-portscanner` | 3 | Real TCP port scanner — scans live targets with TcpClient |
 
 ---
 
@@ -535,6 +536,126 @@ PORT     STATE    SERVICE     VERSION
 ```
 
 Your C# app stores and analyzes that same data structure. Same pattern, different tool.
+
+---
+
+## Week 3 — Real TCP Port Scanner (`week3-portscanner`)
+
+A working port scanner that makes actual TCP connections to a target. This is what `nmap -sT` does under the hood.
+
+### What It Does
+
+```
+[*] Scanning 192.168.1.64 for open ports...
+
+[+] Port 22     is open.
+[-] Port 21     is closed.
+[-] Port 23     is closed.
+[-] Port 80     is closed.
+[-] Port 443    is closed.
+[-] Port 3306   is closed.
+[-] Port 8080   is closed.
+```
+
+### The Code
+
+```csharp
+using System;
+using System.Net.Sockets;
+
+class Program
+{
+    static bool ScanPort(string target, int port)
+    {
+        try
+        {
+            TcpClient client = new TcpClient();
+            client.Connect(target, port);
+            client.Close();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    static void Main(string[] args)
+    {
+        string target = "192.168.1.64";
+        int[] ports = { 21, 22, 23, 80, 443, 3306, 8080 };
+        Console.WriteLine($"[*] Scanning {target} for open ports...\n");
+        for (int i = 0; i < ports.Length; i++)
+        {
+            bool isOpen = ScanPort(target, ports[i]);
+            if (isOpen)
+                Console.WriteLine($"[+] Port {ports[i],-6} is open.");
+            else
+                Console.WriteLine($"[-] Port {ports[i],-6} is closed.");
+        }
+    }
+}
+```
+
+### Line-by-Line
+
+| Line | What It Does |
+|------|-------------|
+| `using System.Net.Sockets;` | Imports networking tools. Gives access to `TcpClient`. |
+| `static bool ScanPort(string target, int port)` | Takes an IP and port number, returns true (open) or false (closed). |
+| `try { }` | Attempts the code inside. If it succeeds, port is open. |
+| `TcpClient client = new TcpClient();` | Creates a new TCP connection object. |
+| `client.Connect(target, port);` | Attempts a TCP three-way handshake (SYN → SYN-ACK → ACK). If the port is open, this succeeds. |
+| `client.Close();` | Closes the connection after testing. Clean up your connections. |
+| `return true;` | Connection succeeded — port is open. |
+| `catch { }` | If `Connect` throws an exception (connection refused/timeout), execution jumps here. |
+| `return false;` | Connection failed — port is closed or filtered. |
+| `$"[+] Port {ports[i],-6}"` | `[+]` = success prefix. `,-6` = left-align in 6-char column. |
+| `$"[-] Port {ports[i],-6}"` | `[-]` = failure prefix. Security tool output convention. |
+
+### New Concepts
+
+**`try/catch` — Exception handling**
+
+When `client.Connect()` fails (port closed, host unreachable, timeout), it doesn't return false — it **throws an exception** which would crash your program. `try/catch` catches that exception and handles it gracefully.
+
+```
+try {
+    // attempt something risky
+} catch {
+    // handle the failure
+}
+```
+
+This is like nmap getting a RST packet back — it doesn't crash, it just marks the port as closed and moves on.
+
+**`TcpClient` — TCP connect scan**
+
+This performs a full TCP three-way handshake:
+```
+Your PC  →  SYN      →  Target
+Your PC  ←  SYN-ACK  ←  Target    (port open)
+Your PC  →  ACK      →  Target
+```
+
+If the port is closed:
+```
+Your PC  →  SYN      →  Target
+Your PC  ←  RST      ←  Target    (port closed — exception thrown)
+```
+
+This is `nmap -sT` (TCP connect scan). It's the most basic scan type — a full connection. Nmap's default `-sS` (SYN scan) only sends the SYN and reads the response without completing the handshake, which is stealthier but requires raw sockets.
+
+### Output Convention
+
+| Prefix | Meaning | Used By |
+|--------|---------|---------|
+| `[*]` | Info/status | Metasploit, custom tools |
+| `[+]` | Success/found | Metasploit, Hydra, Gobuster |
+| `[-]` | Failure/not found | Metasploit, Hydra |
+| `[!]` | Warning/alert | Custom tools |
+
+These prefixes are standard across pentest tools. Using them in your C# output makes it look and feel like a real security tool.
 
 ---
 
